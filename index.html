@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSD1306 OLED C++ Code Generator | ESP32-C3 GIF Animator</title>
+  <meta name="description" content="Generate monochrome C++ byte arrays and GIF animations for SSD1306 OLED displays on ESP32 C3 using advanced dithering algorithms like Floyd-Steinberg and Atkinson.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Background decorative glowing rings -->
+  <div class="glow-bg-orb orb-1"></div>
+  <div class="glow-bg-orb orb-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-logo-area">
+        <div class="logo-icon">📟</div>
+        <div>
+          <h1 id="app-main-title">SSD1306 OLED C++ Code Generator</h1>
+          <p id="app-subtitle">Convert GIF animations and images into high-fidelity Adafruit_GFX structures for microcontrollers</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="badge-chip chip-esp">ESP32-C3</span>
+        <span class="badge-chip chip-oled">SSD1306 128x64</span>
+      </div>
+    </header>
+
+    <main class="app-main-grid">
+      <!-- Left Sidebar: Controls -->
+      <section class="sidebar-panel glass-card">
+        <div class="section-title">
+          <span class="step-num">1</span>
+          <h2>Upload Media</h2>
+        </div>
+        
+        <!-- Drag and Drop Zone -->
+        <div id="drop-zone" class="upload-drop-zone">
+          <input type="file" id="file-input" accept="image/gif, image/png, image/jpeg, image/webp" class="file-input-hidden">
+          <div class="upload-icon">📥</div>
+          <h3>Drag & Drop file here</h3>
+          <p>Supports GIF, PNG, JPG, WEBP</p>
+          <button id="browse-btn" class="btn btn-secondary btn-sm">Browse Files</button>
+        </div>
+
+        <div class="section-title">
+          <span class="step-num">2</span>
+          <h2>Display Settings</h2>
+        </div>
+
+        <!-- Presets and Dimensions -->
+        <div class="control-group row-inputs">
+          <div class="input-field">
+            <label for="display-preset">Preset Size</label>
+            <select id="display-preset">
+              <option value="128x64" selected>128 x 64 px (Standard)</option>
+              <option value="128x32">128 x 32 px (Narrow)</option>
+              <option value="64x48">64 x 48 px (Tiny)</option>
+              <option value="custom">Custom Size...</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group row-inputs" id="custom-dims-wrapper" style="display: none;">
+          <div class="input-field">
+            <label for="target-width">Width (px)</label>
+            <input type="number" id="target-width" value="128" min="8" max="256" step="8">
+          </div>
+          <div class="input-field">
+            <label for="target-height">Height (px)</label>
+            <input type="number" id="target-height" value="64" min="8" max="256" step="8">
+          </div>
+        </div>
+
+        <!-- Scaling & Inversion -->
+        <div class="control-group row-inputs">
+          <div class="input-field">
+            <label for="scale-mode">Scale Mode</label>
+            <select id="scale-mode">
+              <option value="fit" selected>Scale to Fit (Keep Aspect)</option>
+              <option value="crop">Center Crop (Fill Screen)</option>
+              <option value="stretch">Stretch to Fill</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-group checkbox-field">
+          <input type="checkbox" id="invert-colors">
+          <label for="invert-colors">Invert Monochromatic Output</label>
+        </div>
+
+        <div class="section-title">
+          <span class="step-num">3</span>
+          <h2>Image Processing</h2>
+        </div>
+
+        <!-- Dithering Options -->
+        <div class="control-group">
+          <label for="dither-algorithm">Dithering Algorithm</label>
+          <select id="dither-algorithm">
+            <option value="floyd-steinberg" selected>Floyd-Steinberg (Classic diffusion)</option>
+            <option value="atkinson">Atkinson (High-contrast detail)</option>
+            <option value="bayer-4x4">Bayer 4x4 (Retro crosshatch)</option>
+            <option value="bayer-8x8">Bayer 8x8 (Fine ordered dither)</option>
+            <option value="stucki">Stucki (Smooth gradients)</option>
+            <option value="burkes">Burkes (Low noise)</option>
+            <option value="sierra-3">Sierra-3 (High fidelity)</option>
+            <option value="sierra-2">Sierra-2 (Medium diffusion)</option>
+            <option value="sierra-lite">Sierra Lite (Fast diffusion)</option>
+            <option value="threshold">None (Simple Threshold)</option>
+          </select>
+        </div>
+
+        <!-- Adjustments -->
+        <div class="slider-field">
+          <div class="slider-label-area">
+            <label for="brightness-slider">Brightness</label>
+            <span id="brightness-val" class="slider-val">0</span>
+          </div>
+          <input type="range" id="brightness-slider" min="-100" max="100" value="0">
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-label-area">
+            <label for="contrast-slider">Contrast</label>
+            <span id="contrast-val" class="slider-val">0</span>
+          </div>
+          <input type="range" id="contrast-slider" min="-100" max="100" value="0">
+        </div>
+
+        <div class="slider-field" id="threshold-slider-wrapper">
+          <div class="slider-label-area">
+            <label for="threshold-slider">Black/White Threshold</label>
+            <span id="threshold-val" class="slider-val">128</span>
+          </div>
+          <input type="range" id="threshold-slider" min="1" max="254" value="128">
+        </div>
+
+        <div class="slider-field">
+          <div class="slider-label-area">
+            <label for="contrast-sharpness">Sharpness Filter</label>
+            <span id="sharpness-val" class="slider-val">0</span>
+          </div>
+          <input type="range" id="contrast-sharpness" min="0" max="100" value="0">
+        </div>
+
+        <div class="section-title">
+          <span class="step-num">4</span>
+          <h2>Animation & Export Settings</h2>
+        </div>
+
+        <!-- GIF options -->
+        <div id="gif-config" class="control-group" style="opacity: 0.5; pointer-events: none;">
+          <div class="row-inputs">
+            <div class="input-field">
+              <label for="gif-delay-override">Frame Delay (ms)</label>
+              <input type="number" id="gif-delay-override" value="64" min="10" max="1000">
+            </div>
+            <div class="checkbox-field inline-checkbox">
+              <input type="checkbox" id="use-original-delay" checked>
+              <label for="use-original-delay">Use source delay</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="array-name">C++ Array Identifier Prefix</label>
+          <input type="text" id="array-name" value="epd_bitmap" placeholder="epd_bitmap">
+        </div>
+      </section>
+
+      <!-- Right Side: Preview & Code -->
+      <section class="main-preview-area">
+        <!-- Live Preview Tab Section -->
+        <div class="preview-tabs glass-card">
+          <div class="tab-header">
+            <button id="tab-oled" class="tab-btn active">📟 OLED Emulator</button>
+            <button id="tab-comparison" class="tab-btn">⚖️ Side-by-Side View</button>
+          </div>
+
+          <!-- OLED Screen Simulator -->
+          <div id="content-oled" class="tab-content active">
+            <div class="oled-emulator-casing">
+              <!-- Physical OLED Bezels & Pins -->
+              <div class="oled-top-pins">
+                <span>GND</span><span>VCC</span><span>SCL</span><span>SDA</span>
+              </div>
+              
+              <div class="oled-screen-frame">
+                <!-- Screen Glow and Canvas -->
+                <div class="oled-glass">
+                  <div class="scanlines"></div>
+                  <canvas id="oled-canvas" width="128" height="64"></canvas>
+                  <div id="oled-placeholder" class="oled-placeholder-message">
+                    <span>OLED DISPLAY OFFLINE</span>
+                    <small>Please upload an image or GIF to start emulator</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="oled-bottom-branding">
+                <span class="oled-type-lbl">0.96" SSD1306 OLED</span>
+                <span class="oled-address-lbl">I2C 0x3C</span>
+              </div>
+            </div>
+
+            <!-- Playback Controls (For GIFs) -->
+            <div id="playback-controls" class="playback-bar disabled">
+              <button id="play-pause-btn" class="ctrl-btn" title="Play/Pause">▶️</button>
+              <button id="prev-frame-btn" class="ctrl-btn" title="Previous Frame">⏮️</button>
+              <div class="playback-slider-container">
+                <input type="range" id="frame-scrubber" min="0" max="0" value="0">
+              </div>
+              <button id="next-frame-btn" class="ctrl-btn" title="Next Frame">⏭️</button>
+              <div class="frame-stats">
+                <span id="frame-counter">0 / 0</span>
+                <span id="frame-delay-lbl" class="stats-mini">-- ms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side-by-Side Comparison -->
+          <div id="content-comparison" class="tab-content">
+            <div class="comparison-grid">
+              <div class="compare-card">
+                <h3>Uploaded Media</h3>
+                <div class="compare-container">
+                  <img id="source-preview" alt="Uploaded source" style="display: none;">
+                  <div id="source-placeholder" class="compare-placeholder">No source loaded</div>
+                </div>
+              </div>
+              <div class="compare-card">
+                <h3>Monochrome Filtered</h3>
+                <div class="compare-container">
+                  <canvas id="mono-preview-canvas" width="128" height="64"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Generation Output -->
+        <div class="code-export-panel glass-card">
+          <div class="code-panel-header">
+            <div class="file-name-tab">
+              <span class="file-icon">📄</span>
+              <span id="cpp-filename">animation_frames.h</span>
+            </div>
+            <div class="code-actions">
+              <button id="copy-code-btn" class="btn btn-primary btn-sm">📋 Copy C++ Code</button>
+              <button id="download-code-btn" class="btn btn-secondary btn-sm">💾 Download .h</button>
+            </div>
+          </div>
+
+          <div class="code-block-wrapper">
+            <pre><code id="cpp-code-output" class="language-cpp">// Output code will appear here after loading an image or GIF file.
+// Upload an image to get started.</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Built for ESP32 C3, ESP8266, and Arduino using Adafruit_SSD1306. Optimized for performance and high-fidelity rendering.</p>
+    </footer>
+  </div>
+
+  <!-- Offscreen canvas for frame compositing and rescaling -->
+  <canvas id="composite-canvas" style="display: none;"></canvas>
+  <canvas id="scale-canvas" style="display: none;"></canvas>
+
+  <!-- Load JS files -->
+  <script src="lib/omggif.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
