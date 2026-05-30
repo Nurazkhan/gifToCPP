@@ -27,6 +27,18 @@
   const gifConfig = document.getElementById('gif-config');
   const gifDelayOverride = document.getElementById('gif-delay-override');
   const useOriginalDelay = document.getElementById('use-original-delay');
+  
+  // Video Elements
+  const videoConfig = document.getElementById('video-config');
+  const videoFpsSelect = document.getElementById('video-fps');
+  const videoLimitInput = document.getElementById('video-limit');
+  const videoStartInput = document.getElementById('video-start');
+  const videoEndInput = document.getElementById('video-end');
+  const extractVideoBtn = document.getElementById('extract-video-btn');
+  const oledProgressLoader = document.getElementById('oled-progress-loader');
+  const progressBarFill = document.getElementById('progress-bar-fill');
+  const progressText = document.getElementById('progress-text');
+  
   const arrayNameInput = document.getElementById('array-name');
   
   const tabOled = document.getElementById('tab-oled');
@@ -58,8 +70,10 @@
   // App State
   let selectedFile = null;
   let isGif = false;
+  let isVideo = false;
   let gifReader = null;
   let staticImage = null;
+  let videoElement = null;
   
   // Composited original frames (full size of uploaded GIF/Image)
   let sourceFrames = []; // Array of { canvas, delay }
@@ -191,6 +205,9 @@
     // Code actions
     copyCodeBtn.addEventListener('click', copyCodeToClipboard);
     downloadCodeBtn.addEventListener('click', downloadHeaderFile);
+    
+    // Video actions
+    extractVideoBtn.addEventListener('click', extractVideoFrames);
   }
 
   // Debouncing for slider adjustments to ensure high performance
@@ -228,6 +245,70 @@
     sourceFrames = [];
     processedFrames = [];
     currentFrameIndex = 0;
+    isGif = false;
+    isVideo = false;
+    
+    // Hide progress loader overlay
+    oledProgressLoader.style.display = 'none';
+
+    if (videoElement) {
+      videoElement.src = '';
+      videoElement = null;
+    }
+
+    if (file.type.startsWith('video/')) {
+      isVideo = true;
+      gifConfig.style.display = 'none';
+      videoConfig.style.display = 'block';
+      playbackControls.classList.add('disabled');
+
+      // Display loader status
+      oledPlaceholder.querySelector('span').textContent = 'VIDEO CONNECTED';
+      oledPlaceholder.querySelector('small').textContent = 'Specify segment settings and click "Process Video Segment"';
+      oledPlaceholder.style.display = 'flex';
+      oledCanvas.style.display = 'none';
+
+      // Load video metadata
+      const url = URL.createObjectURL(file);
+      videoElement = document.createElement('video');
+      videoElement.muted = true;
+      videoElement.playsInline = true;
+      videoElement.preload = 'auto';
+
+      videoElement.onloadedmetadata = function () {
+        const duration = videoElement.duration;
+        videoStartInput.value = '0';
+        videoStartInput.max = duration.toFixed(1);
+        videoEndInput.value = Math.min(5, duration).toFixed(1);
+        videoEndInput.max = duration.toFixed(1);
+        
+        // Seek to start frame
+        videoElement.currentTime = 0;
+      };
+
+      videoElement.onseeked = function () {
+        // Draw the seeked frame as comparison preview
+        const canvas = document.createElement('canvas');
+        canvas.width = videoElement.videoWidth;
+        canvas.height = videoElement.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0);
+        
+        sourcePreview.src = canvas.toDataURL();
+        sourcePreview.style.display = 'block';
+        sourcePlaceholder.style.display = 'none';
+        
+        // Remove this temporary handler
+        videoElement.onseeked = null;
+      };
+
+      videoElement.src = url;
+      return;
+    }
+
+    // Default: Image or GIF
+    gifConfig.style.display = 'block';
+    videoConfig.style.display = 'none';
 
     // Display loader
     oledPlaceholder.querySelector('span').textContent = 'DECODING FILE...';
@@ -293,12 +374,13 @@
 
   function resetUI() {
     oledPlaceholder.querySelector('span').textContent = 'OLED DISPLAY OFFLINE';
-    oledPlaceholder.querySelector('small').textContent = 'Please upload an image or GIF to start emulator';
+    oledPlaceholder.querySelector('small').textContent = 'Please upload an image, GIF, or video to start emulator';
     oledPlaceholder.style.display = 'flex';
     oledCanvas.style.display = 'none';
     playbackControls.classList.add('disabled');
     sourcePreview.style.display = 'none';
     sourcePlaceholder.style.display = 'flex';
+    oledProgressLoader.style.display = 'none';
   }
 
   /**
@@ -377,6 +459,117 @@
     sourcePlaceholder.style.display = 'none';
 
     processAndRender();
+  }
+
+  async function extractVideoFrames() {
+    if (!videoElement) return;
+
+    const startTime = parseFloat(videoStartInput.value) || 0;
+    const endTime = parseFloat(videoEndInput.value) || videoElement.duration;
+    const fps = parseInt(videoFpsSelect.value) || 10;
+    const limit = parseInt(videoLimitInput.value) || 150;
+
+    if (startTime < 0 || endTime <= startTime) {
+      alert("Invalid start or end time.");
+      return;
+    }
+
+    // Reset frames and state
+    sourceFrames = [];
+    processedFrames = [];
+    currentFrameIndex = 0;
+    stopPlayback();
+
+    // Setup visual progress
+    oledPlaceholder.style.display = 'none';
+    oledCanvas.style.display = 'none';
+    oledProgressLoader.style.display = 'flex';
+    progressBarFill.style.width = '0%';
+    progressText.textContent = '0%';
+
+    // Disable extract button
+    extractVideoBtn.disabled = true;
+    const originalText = extractVideoBtn.textContent;
+    extractVideoBtn.textContent = '⚙️ Processing Video...';
+
+    const duration = endTime - startTime;
+    const timeStep = 1 / fps;
+    const estimatedFrames = Math.min(limit, Math.ceil(duration / timeStep) + 1);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    const ctx = canvas.getContext('2d');
+
+    const seekToTime = (time) => {
+      return new Promise((resolve, reject) => {
+        const onSeeked = () => {
+          videoElement.removeEventListener('seeked', onSeeked);
+          videoElement.removeEventListener('error', onError);
+          resolve();
+        };
+        const onError = (e) => {
+          videoElement.removeEventListener('seeked', onSeeked);
+          videoElement.removeEventListener('error', onError);
+          reject(e);
+        };
+        videoElement.addEventListener('seeked', onSeeked);
+        videoElement.addEventListener('error', onError);
+        videoElement.currentTime = time;
+      });
+    };
+
+    let currentTime = startTime;
+    let framesProcessed = 0;
+
+    try {
+      while (currentTime <= endTime && framesProcessed < limit) {
+        await seekToTime(currentTime);
+
+        // Capture canvas frame
+        ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+        const frameCanvas = document.createElement('canvas');
+        frameCanvas.width = canvas.width;
+        frameCanvas.height = canvas.height;
+        const frameCtx = frameCanvas.getContext('2d');
+        frameCtx.drawImage(canvas, 0, 0);
+
+        sourceFrames.push({
+          canvas: frameCanvas,
+          delay: Math.round(1000 / fps)
+        });
+
+        framesProcessed++;
+        const percent = Math.round((framesProcessed / estimatedFrames) * 100);
+        progressBarFill.style.width = `${Math.min(100, percent)}%`;
+        progressText.textContent = `${Math.min(100, percent)}%`;
+
+        currentTime += timeStep;
+      }
+    } catch (err) {
+      console.error('Error during video extraction: ', err);
+      alert('Failed to extract video frames: ' + err.message);
+    } finally {
+      extractVideoBtn.disabled = false;
+      extractVideoBtn.textContent = originalText;
+      oledProgressLoader.style.display = 'none';
+    }
+
+    if (sourceFrames.length > 0) {
+      // Set preview frame (first frame)
+      sourcePreview.src = sourceFrames[0].canvas.toDataURL();
+      sourcePreview.style.display = 'block';
+      sourcePlaceholder.style.display = 'none';
+
+      oledCanvas.style.display = 'block';
+      oledPlaceholder.style.display = 'none';
+      playbackControls.classList.remove('disabled');
+
+      processAndRender();
+    } else {
+      resetUI();
+    }
   }
 
   /* ==========================================
@@ -502,7 +695,7 @@
     }
 
     // Set scrubber attributes
-    if (isGif) {
+    if (isGif || isVideo) {
       frameScrubber.max = processedFrames.length - 1;
       frameCounter.textContent = `1 / ${processedFrames.length}`;
     } else {
@@ -518,7 +711,7 @@
     showFrame(currentFrameIndex);
 
     // Auto-play GIF after loading
-    if (isGif && !isPlaying) {
+    if ((isGif || isVideo) && !isPlaying) {
       startPlayback();
     }
 

@@ -46,10 +46,10 @@
         
         <!-- Drag and Drop Zone -->
         <div id="drop-zone" class="upload-drop-zone">
-          <input type="file" id="file-input" accept="image/gif, image/png, image/jpeg, image/webp" class="file-input-hidden">
+          <input type="file" id="file-input" accept="image/gif, image/png, image/jpeg, image/webp, video/mp4, video/webm, video/ogg" class="file-input-hidden">
           <div class="upload-icon">📥</div>
           <h3>Drag & Drop file here</h3>
-          <p>Supports GIF, PNG, JPG, WEBP</p>
+          <p>Supports GIF, PNG, JPG, MP4, WEBM</p>
           <button id="browse-btn" class="btn btn-secondary btn-sm">Browse Files</button>
         </div>
 
@@ -173,6 +173,37 @@
           </div>
         </div>
 
+        <!-- Video Options -->
+        <div id="video-config" class="control-group" style="display: none; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem;">
+          <div class="row-inputs">
+            <div class="input-field">
+              <label for="video-fps">Target FPS</label>
+              <select id="video-fps">
+                <option value="5">5 FPS</option>
+                <option value="10">10 FPS</option>
+                <option value="15" selected>15 FPS</option>
+                <option value="20">20 FPS</option>
+                <option value="30">30 FPS</option>
+              </select>
+            </div>
+            <div class="input-field">
+              <label for="video-limit">Max Frames</label>
+              <input type="number" id="video-limit" value="150" min="10" max="500">
+            </div>
+          </div>
+          <div class="row-inputs" style="margin-top: 0.5rem;">
+            <div class="input-field">
+              <label for="video-start">Start Time (s)</label>
+              <input type="number" id="video-start" value="0" min="0" step="0.1">
+            </div>
+            <div class="input-field">
+              <label for="video-end">End Time (s)</label>
+              <input type="number" id="video-end" value="5" min="0.1" step="0.1">
+            </div>
+          </div>
+          <button id="extract-video-btn" class="btn btn-primary btn-sm" style="margin-top: 0.75rem; width: 100%;">⚙️ Process Video Segment</button>
+        </div>
+
         <div class="control-group">
           <label for="array-name">C++ Array Identifier Prefix</label>
           <input type="text" id="array-name" value="epd_bitmap" placeholder="epd_bitmap">
@@ -203,7 +234,15 @@
                   <canvas id="oled-canvas" width="128" height="64"></canvas>
                   <div id="oled-placeholder" class="oled-placeholder-message">
                     <span>OLED DISPLAY OFFLINE</span>
-                    <small>Please upload an image or GIF to start emulator</small>
+                    <small>Please upload an image, GIF, or video to start emulator</small>
+                  </div>
+                  <!-- Video decoding progress bar -->
+                  <div id="oled-progress-loader" class="oled-progress-container" style="display: none;">
+                    <span class="progress-title">DECODING VIDEO</span>
+                    <div class="progress-bar">
+                      <div id="progress-bar-fill" class="progress-fill"></div>
+                    </div>
+                    <span id="progress-text" class="progress-percent">0%</span>
                   </div>
                 </div>
               </div>

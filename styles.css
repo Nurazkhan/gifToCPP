@@ -905,3 +905,70 @@ code {
   font-size: 0.8rem;
   color: var(--text-muted);
 }
+
+/* ==========================================
+   VIDEO PROGRESS INDICATOR & VIDEO CONFIG
+   ========================================== */
+.oled-progress-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(8, 10, 18, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  z-index: 10;
+}
+
+.progress-title {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  text-shadow: var(--glow-cyan);
+  letter-spacing: 1px;
+}
+
+.progress-bar {
+  width: 70%;
+  height: 8px;
+  background: var(--bg-deep);
+  border: 1px solid rgba(0, 210, 255, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background-color: var(--accent-cyan);
+  box-shadow: var(--glow-cyan);
+  transition: width 0.05s ease-out;
+}
+
+.progress-percent {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-cyan);
+  text-shadow: var(--glow-cyan);
+}
+
+#video-config {
+  transition: all var(--transition-normal);
+}
+
+#video-config label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+#video-config input[type="number"], #video-config select {
+  font-size: 0.85rem;
+  padding: 0.45rem 0.6rem;
+}
+
