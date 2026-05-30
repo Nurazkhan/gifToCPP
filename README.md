@@ -5,7 +5,7 @@
 
 **Convert images, GIFs, and videos into C++ byte arrays for SSD1306 OLED displays**
 
-*A project by [Naizagai Lab](https://github.com/YOUR_USERNAME)*
+*A project by [Naizagai Lab](https://naizagailab.vercel.app)*
 
 [![Version](https://img.shields.io/badge/Version-1.0.0-00d4ff.svg)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-cyan.svg)](#license)
