@@ -1,5 +1,4 @@
-<![CDATA[<div align="center">
-
+<div align="center">
 <img src="assets/logo.png" alt="Naizagai Lab" width="120">
 
 # 📟 SSD1306 OLED C++ Code Generator
@@ -17,13 +16,7 @@
 
 ---
 
-<!-- 
-  📸 SCREENSHOT PLACEHOLDER
-  Replace the line below with your actual screenshot:
-  ![App Screenshot](screenshots/main-ui.png)
--->
-
-> 🖼️ _Add your screenshots here — see [Adding Screenshots](#-adding-screenshots) below._
+![App Screenshot](screenshots/main-ui.png)
 
 ---
 
@@ -90,7 +83,7 @@ Open **http://localhost:3000** in your browser.
 
 Drag and drop an **image**, **animated GIF**, or **MP4/WebM video** onto the upload area (or click **Browse Files**).
 
-<!-- ![Upload Screenshot](screenshots/upload.gif) -->
+![Upload Screenshot](screenshots/upload.gif)
 
 ### Step 2 — Configure Settings
 
@@ -115,7 +108,7 @@ When uploading MP4/WebM, a video configuration panel appears:
 
 Click **⚙️ Process Video Segment** to extract frames. A progress bar will show decoding status.
 
-<!-- ![Video Config Screenshot](screenshots/video-config.gif) -->
+![Video Config Screenshot](screenshots/video-config.gif)
 
 ### Step 4 — Preview & Export
 
@@ -124,7 +117,7 @@ Click **⚙️ Process Video Segment** to extract frames. A progress bar will sh
 - Use **playback controls** (▶️ ⏮️ ⏭️) to step through animation frames
 - Click **📋 Copy C++ Code** or **⬇️ Download .h File**
 
-<!-- ![OLED Emulator Screenshot](screenshots/emulator.gif) -->
+![OLED Emulator Screenshot](screenshots/emulator.gif)
 
 ### Step 5 — Use in Arduino
 
@@ -240,19 +233,6 @@ The generated C++ code is compatible with any board that supports the **Adafruit
 
 ---
 
-## 📸 Adding Screenshots
-
-To add your screenshots to this README:
-
-1. Create a `screenshots/` folder in the project root
-2. Add your screenshot images there (PNG or JPG)
-3. Uncomment the screenshot lines in this README and update the paths:
-
-```markdown
-![App Screenshot](screenshots/main-ui.png)
-```
-
----
 
 ## 🛠️ Tech Stack
 
@@ -281,4 +261,3 @@ Made by **Nurazkhan** · 2026 · V1.0.0
 _If this tool saved you time, consider giving it a ⭐!_
 
 </div>
-]]>
